@@ -1,8 +1,11 @@
 const STORAGE_KEY = 'better-todo-app.tasks';
 const THEME_KEY = 'better-todo-app.theme';
+const FILTER_KEY = 'better-todo-app.filter';
+const SEARCH_KEY = 'better-todo-app.search';
 
 const taskForm = document.getElementById('task-form');
 const taskInput = document.getElementById('task-input');
+const taskSearch = document.getElementById('task-search');
 const taskList = document.getElementById('task-list');
 const taskCount = document.getElementById('task-count');
 const completedCount = document.getElementById('completed-count');
@@ -12,6 +15,7 @@ const themeToggle = document.getElementById('theme-toggle');
 
 let tasks = [];
 let currentFilter = 'all';
+let currentSearch = '';
 
 function loadTasks() {
   try {
@@ -73,13 +77,20 @@ function clearCompletedTasks() {
 }
 
 function getFilteredTasks() {
+  let visibleTasks = tasks;
+
   if (currentFilter === 'active') {
-    return tasks.filter((task) => !task.completed);
+    visibleTasks = visibleTasks.filter((task) => !task.completed);
+  } else if (currentFilter === 'completed') {
+    visibleTasks = visibleTasks.filter((task) => task.completed);
   }
-  if (currentFilter === 'completed') {
-    return tasks.filter((task) => task.completed);
+
+  if (currentSearch.trim()) {
+    const query = currentSearch.trim().toLowerCase();
+    visibleTasks = visibleTasks.filter((task) => task.text.toLowerCase().includes(query));
   }
-  return tasks;
+
+  return visibleTasks;
 }
 
 function formatDate(isoString) {
@@ -136,6 +147,24 @@ function updateFilterButtons() {
   filterButtons.forEach((button) => {
     button.classList.toggle('active', button.dataset.filter === currentFilter);
   });
+}
+
+function saveFilterState() {
+  localStorage.setItem(FILTER_KEY, currentFilter);
+  localStorage.setItem(SEARCH_KEY, currentSearch);
+}
+
+function loadFilterState() {
+  const storedFilter = localStorage.getItem(FILTER_KEY);
+  const storedSearch = localStorage.getItem(SEARCH_KEY);
+  currentFilter = storedFilter || 'all';
+  currentSearch = storedSearch || '';
+
+  if (taskSearch) {
+    taskSearch.value = currentSearch;
+  }
+
+  updateFilterButtons();
 }
 
 function escapeHtml(unsafe) {
@@ -196,9 +225,18 @@ clearCompletedButton.addEventListener('click', clearCompletedTasks);
 filterButtons.forEach((button) => {
   button.addEventListener('click', () => {
     currentFilter = button.dataset.filter;
+    saveFilterState();
     renderTasks();
   });
 });
+
+if (taskSearch) {
+  taskSearch.addEventListener('input', (event) => {
+    currentSearch = event.target.value;
+    saveFilterState();
+    renderTasks();
+  });
+}
 
 if (themeToggle) {
   themeToggle.addEventListener('click', toggleTheme);
@@ -207,5 +245,6 @@ if (themeToggle) {
 window.addEventListener('beforeunload', saveTasks);
 
 loadTheme();
+loadFilterState();
 loadTasks();
 renderTasks();
