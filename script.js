@@ -2,12 +2,15 @@ const STORAGE_KEY = 'better-todo-app.tasks';
 const THEME_KEY = 'better-todo-app.theme';
 const FILTER_KEY = 'better-todo-app.filter';
 const SEARCH_KEY = 'better-todo-app.search';
+const TAG_FILTER_KEY = 'better-todo-app.tagFilter';
 
 const taskForm = document.getElementById('task-form');
 const taskInput = document.getElementById('task-input');
 const taskDue = document.getElementById('task-due');
 const taskPriority = document.getElementById('task-priority');
 const taskNotes = document.getElementById('task-notes');
+const taskTagsInput = document.getElementById('task-tags');
+const tagFilterBar = document.getElementById('tag-filter-bar');
 const taskSearch = document.getElementById('task-search');
 const taskList = document.getElementById('task-list');
 const taskCount = document.getElementById('task-count');
@@ -27,6 +30,7 @@ let tasks = [];
 let currentFilter = 'all';
 let currentSearch = '';
 let currentSort = 'default';
+let currentTagFilter = '';
 let lastDeletedTask = null;
 let undoTimeoutId = null;
 let audioContext = null;
@@ -68,7 +72,12 @@ function getTaskNotes() {
   return taskNotes?.value.trim();
 }
 
-function createTask(text, dueDate = null, priority = 'medium', notes = '') {
+function getTaskTags() {
+  if (!taskTagsInput?.value.trim()) return [];
+  return taskTagsInput.value.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
+}
+
+function createTask(text, dueDate = null, priority = 'medium', notes = '', tags = []) {
   return {
     id: crypto.randomUUID(),
     text,
@@ -77,18 +86,20 @@ function createTask(text, dueDate = null, priority = 'medium', notes = '') {
     dueDate,
     priority,
     notes,
+    tags,
   };
 }
 
 function addTask(text) {
   if (!text) return;
-  tasks.unshift(createTask(text, getTaskDueDate(), getTaskPriority(), getTaskNotes()));
+  tasks.unshift(createTask(text, getTaskDueDate(), getTaskPriority(), getTaskNotes(), getTaskTags()));
   saveTasks();
   renderTasks();
   taskInput.value = '';
   taskDue.value = '';
   if (taskPriority) taskPriority.value = 'medium';
   if (taskNotes) taskNotes.value = '';
+  if (taskTagsInput) taskTagsInput.value = '';
   taskInput.focus();
   playSound('add');
 }
@@ -130,6 +141,10 @@ function getFilteredTasks() {
     visibleTasks = visibleTasks.filter((task) => task.completed);
   }
 
+  if (currentTagFilter) {
+    visibleTasks = visibleTasks.filter((task) => task.tags?.includes(currentTagFilter));
+  }
+
   if (currentSearch.trim()) {
     const query = currentSearch.trim().toLowerCase();
     visibleTasks = visibleTasks.filter((task) => task.text.toLowerCase().includes(query));
@@ -152,7 +167,26 @@ function getFilteredTasks() {
   return visibleTasks;
 }
 
-function formatDate(isoString) {
+function getAllTags() {
+  const tagSet = new Set();
+  tasks.forEach((task) => task.tags?.forEach((tag) => tagSet.add(tag)));
+  return [...tagSet].sort();
+}
+
+function renderTagFilterBar() {
+  if (!tagFilterBar) return;
+  const allTags = getAllTags();
+  if (allTags.length === 0) {
+    tagFilterBar.innerHTML = '';
+    return;
+  }
+  tagFilterBar.innerHTML = `
+    <button class="tag-filter-btn${currentTagFilter === '' ? ' active' : ''}" data-tag="">All Tags</button>
+    ${allTags.map((tag) => `<button class="tag-filter-btn${currentTagFilter === tag ? ' active' : ''}" data-tag="${escapeHtml(tag)}">&#35;${escapeHtml(tag)}</button>`).join('')}
+  `;
+}
+
+
   return new Intl.DateTimeFormat(undefined, {
     month: 'short',
     day: 'numeric',
@@ -184,6 +218,7 @@ function renderTasks() {
               <div class="task-meta">
                 ${task.dueDate ? `<span class="task-pill due-pill${isOverdue(task) ? ' overdue-pill' : ''}">Due ${formatDueDate(task.dueDate)}</span>` : ''}
                 <span class="task-pill priority-pill ${escapeHtml(task.priority)}">${escapeHtml(task.priority)}</span>
+                ${(task.tags || []).map((tag) => `<button class="task-pill tag-pill" data-tag="${escapeHtml(tag)}">&#35;${escapeHtml(tag)}</button>`).join('')}
                 <span>Created ${formatDate(task.createdAt)}</span>
               </div>
               ${task.notes ? `<p class="task-notes">${escapeHtml(task.notes)}</p>` : ''}
@@ -201,6 +236,7 @@ function renderTasks() {
     });
   }
 
+  renderTagFilterBar();
   updateSummary();
   updateFilterButtons();
 }
@@ -224,6 +260,7 @@ function updateFilterButtons() {
 function saveFilterState() {
   localStorage.setItem(FILTER_KEY, currentFilter);
   localStorage.setItem(SEARCH_KEY, currentSearch);
+  localStorage.setItem(TAG_FILTER_KEY, currentTagFilter);
 }
 
 function loadFilterState() {
@@ -231,6 +268,7 @@ function loadFilterState() {
   const storedSearch = localStorage.getItem(SEARCH_KEY);
   currentFilter = storedFilter || 'all';
   currentSearch = storedSearch || '';
+  currentTagFilter = localStorage.getItem(TAG_FILTER_KEY) || '';
 
   if (taskSearch) {
     taskSearch.value = currentSearch;
@@ -338,7 +376,7 @@ function handleImportFile(event) {
       importedTasks.forEach((task) => {
         if (!task?.text) return;
         tasks.push(
-          createTask(task.text, task.dueDate, task.priority || 'medium', task.notes || ''),
+          createTask(task.text, task.dueDate, task.priority || 'medium', task.notes || '', task.tags || []),
         );
         const addedTask = tasks[tasks.length - 1];
         addedTask.completed = !!task.completed;
@@ -427,10 +465,27 @@ taskForm.addEventListener('submit', (event) => {
   addTask(getTaskText());
 });
 
+if (tagFilterBar) {
+  tagFilterBar.addEventListener('click', (event) => {
+    const btn = event.target.closest('.tag-filter-btn');
+    if (!btn) return;
+    currentTagFilter = btn.dataset.tag;
+    saveFilterState();
+    renderTasks();
+  });
+}
+
 taskList.addEventListener('click', (event) => {
   const taskCard = event.target.closest('.task-card');
   if (!taskCard) return;
   const taskId = taskCard.dataset.id;
+
+  if (event.target.closest('.tag-pill')) {
+    currentTagFilter = event.target.closest('.tag-pill').dataset.tag;
+    saveFilterState();
+    renderTasks();
+    return;
+  }
 
   if (event.target.matches('input[type="checkbox"]')) {
     toggleTaskCompleted(taskId);

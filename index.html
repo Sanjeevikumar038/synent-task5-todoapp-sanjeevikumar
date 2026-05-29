@@ -36,6 +36,7 @@
           </select>
         </div>
         <textarea id="task-notes" rows="2" placeholder="Optional notes or subtasks" aria-label="Task notes"></textarea>
+        <input id="task-tags" type="text" placeholder="Tags: work, personal, urgent (comma separated)" aria-label="Task tags" />
       </form>
 
       <div class="search-panel">
@@ -43,6 +44,8 @@
           <input id="task-search" type="search" placeholder="Search tasks" aria-label="Search tasks" />
         </label>
       </div>
+
+      <div id="tag-filter-bar" class="tag-filter-bar" aria-label="Filter by tag"></div>
 
       <div class="controls">
         <div class="filters">
