@@ -26,9 +26,17 @@ const themeToggle = document.getElementById('theme-toggle');
 let tasks = [];
 let currentFilter = 'all';
 let currentSearch = '';
+let currentSort = 'default';
 let lastDeletedTask = null;
 let undoTimeoutId = null;
 let audioContext = null;
+
+const sortSelect = document.getElementById('sort-tasks');
+
+function isOverdue(task) {
+  if (!task.dueDate || task.completed) return false;
+  return new Date(task.dueDate) < new Date(new Date().toDateString());
+}
 
 function loadTasks() {
   try {
@@ -127,6 +135,20 @@ function getFilteredTasks() {
     visibleTasks = visibleTasks.filter((task) => task.text.toLowerCase().includes(query));
   }
 
+  if (currentSort === 'priority') {
+    const order = { high: 0, medium: 1, low: 2 };
+    visibleTasks = [...visibleTasks].sort((a, b) => (order[a.priority] ?? 1) - (order[b.priority] ?? 1));
+  } else if (currentSort === 'due') {
+    visibleTasks = [...visibleTasks].sort((a, b) => {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    });
+  } else if (currentSort === 'created') {
+    visibleTasks = [...visibleTasks].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
   return visibleTasks;
 }
 
@@ -148,7 +170,8 @@ function renderTasks() {
   } else {
     visibleTasks.forEach((task) => {
       const listItem = document.createElement('li');
-      listItem.className = `task-card${task.completed ? ' completed' : ''}`;
+      const overdue = isOverdue(task);
+      listItem.className = `task-card${task.completed ? ' completed' : ''}${overdue ? ' overdue' : ''}`;
       listItem.dataset.id = task.id;
       listItem.setAttribute('draggable', 'true');
 
@@ -159,7 +182,7 @@ function renderTasks() {
             <div class="task-text-block">
               <p class="task-title${task.completed ? ' completed' : ''}">${escapeHtml(task.text)}</p>
               <div class="task-meta">
-                ${task.dueDate ? `<span class="task-pill due-pill">Due ${formatDueDate(task.dueDate)}</span>` : ''}
+                ${task.dueDate ? `<span class="task-pill due-pill${isOverdue(task) ? ' overdue-pill' : ''}">Due ${formatDueDate(task.dueDate)}</span>` : ''}
                 <span class="task-pill priority-pill ${escapeHtml(task.priority)}">${escapeHtml(task.priority)}</span>
                 <span>Created ${formatDate(task.createdAt)}</span>
               </div>
@@ -465,6 +488,14 @@ taskList.addEventListener('drop', (event) => {
   taskList.querySelectorAll('.task-card').forEach((card) => card.classList.remove('drag-over'));
   reorderTasks(sourceId, targetId);
 });
+
+if (sortSelect) {
+  sortSelect.value = currentSort;
+  sortSelect.addEventListener('change', () => {
+    currentSort = sortSelect.value;
+    renderTasks();
+  });
+}
 
 clearCompletedButton.addEventListener('click', clearCompletedTasks);
 if (markAllCompleteButton) {

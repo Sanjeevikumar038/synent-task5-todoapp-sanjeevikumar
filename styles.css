@@ -444,11 +444,33 @@ body::after {
   background: rgba(56, 189, 248, 0.12);
 }
 
-.task-card.completed {
-  opacity: 0.86;
-  background: rgba(34, 197, 94, 0.08);
-  border-color: rgba(34, 197, 94, 0.24);
+.task-card.overdue {
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(248, 113, 113, 0.07);
 }
+
+.overdue-pill {
+  background: rgba(248, 113, 113, 0.18) !important;
+  border-color: rgba(248, 113, 113, 0.38) !important;
+  color: var(--danger) !important;
+}
+
+#sort-tasks {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 0.82rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1rem;
+  appearance: none;
+}
+
+#sort-tasks:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+
 
 @keyframes fadeInUp {
   from {
