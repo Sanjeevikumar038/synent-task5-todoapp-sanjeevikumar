@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'better-todo-app.tasks';
+const THEME_KEY = 'better-todo-app.theme';
 
 const taskForm = document.getElementById('task-form');
 const taskInput = document.getElementById('task-input');
@@ -7,6 +8,7 @@ const taskCount = document.getElementById('task-count');
 const completedCount = document.getElementById('completed-count');
 const clearCompletedButton = document.getElementById('clear-completed');
 const filterButtons = document.querySelectorAll('.filter-button');
+const themeToggle = document.getElementById('theme-toggle');
 
 let tasks = [];
 let currentFilter = 'all';
@@ -145,6 +147,30 @@ function escapeHtml(unsafe) {
     .replace(/'/g, '&#039;');
 }
 
+function applyTheme(theme) {
+  const isLight = theme === 'light';
+  document.body.classList.toggle('light', isLight);
+  if (themeToggle) {
+    themeToggle.textContent = isLight ? 'Dark mode' : 'Light mode';
+    themeToggle.setAttribute('aria-label', `Switch to ${isLight ? 'dark' : 'light'} theme`);
+  }
+}
+
+function loadTheme() {
+  const storedTheme = localStorage.getItem(THEME_KEY);
+  applyTheme(storedTheme === 'light' ? 'light' : 'dark');
+}
+
+function saveTheme(theme) {
+  localStorage.setItem(THEME_KEY, theme);
+}
+
+function toggleTheme() {
+  const nextTheme = document.body.classList.contains('light') ? 'dark' : 'light';
+  saveTheme(nextTheme);
+  applyTheme(nextTheme);
+}
+
 taskForm.addEventListener('submit', (event) => {
   event.preventDefault();
   addTask(getTaskText());
@@ -174,7 +200,12 @@ filterButtons.forEach((button) => {
   });
 });
 
+if (themeToggle) {
+  themeToggle.addEventListener('click', toggleTheme);
+}
+
 window.addEventListener('beforeunload', saveTasks);
 
+loadTheme();
 loadTasks();
 renderTasks();
