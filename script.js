@@ -186,7 +186,7 @@ function renderTagFilterBar() {
   `;
 }
 
-
+function formatDate(isoString) {
   return new Intl.DateTimeFormat(undefined, {
     month: 'short',
     day: 'numeric',
@@ -197,11 +197,20 @@ function renderTagFilterBar() {
 
 function renderTasks() {
   const visibleTasks = getFilteredTasks();
+  const existingBar = document.querySelector('.clear-completed-bar');
+  if (existingBar) existingBar.remove();
   taskList.innerHTML = '';
 
   if (visibleTasks.length === 0) {
     taskList.innerHTML = `<li class="task-card empty-state">No tasks yet. Add your first one above.</li>`;
   } else {
+    if (currentFilter === 'completed') {
+      const clearBtn = document.createElement('div');
+      clearBtn.className = 'clear-completed-bar';
+      clearBtn.innerHTML = `<button id="clear-completed" class="secondary danger-secondary">Clear All Completed</button>`;
+      taskList.before(clearBtn);
+      document.getElementById('clear-completed').addEventListener('click', clearCompletedTasks);
+    }
     visibleTasks.forEach((task) => {
       const listItem = document.createElement('li');
       const overdue = isOverdue(task);
@@ -211,10 +220,13 @@ function renderTasks() {
 
       listItem.innerHTML = `
         <div class="task-card-content">
-          <label>
-            <input type="checkbox" ${task.completed ? 'checked' : ''} aria-label="Mark task complete" />
+          <div class="task-main-row">
+            <button class="complete-toggle${task.completed ? ' is-completed' : ''}" aria-label="${task.completed ? 'Mark incomplete' : 'Mark complete'}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </button>
             <div class="task-text-block">
               <p class="task-title${task.completed ? ' completed' : ''}">${escapeHtml(task.text)}</p>
+              ${task.completed ? '<span class="completed-badge">&#10003; Completed</span>' : ''}
               <div class="task-meta">
                 ${task.dueDate ? `<span class="task-pill due-pill${isOverdue(task) ? ' overdue-pill' : ''}">Due ${formatDueDate(task.dueDate)}</span>` : ''}
                 <span class="task-pill priority-pill ${escapeHtml(task.priority)}">${escapeHtml(task.priority)}</span>
@@ -223,7 +235,7 @@ function renderTasks() {
               </div>
               ${task.notes ? `<p class="task-notes">${escapeHtml(task.notes)}</p>` : ''}
             </div>
-          </label>
+          </div>
           <div class="task-action">
             <button class="task-button edit-button" aria-label="Edit task">Edit</button>
             <button class="task-button notes-button" aria-label="Edit notes">${task.notes ? 'Notes' : 'Add note'}</button>
@@ -248,7 +260,6 @@ function updateSummary() {
   taskCount.textContent = `${total} task${total === 1 ? '' : 's'}`;
   completedCount.textContent = `${completed} completed`;
   if (progressChip) progressChip.textContent = `${completionRate}% complete`;
-  clearCompletedButton.disabled = completed === 0;
 }
 
 function updateFilterButtons() {
@@ -480,6 +491,12 @@ taskList.addEventListener('click', (event) => {
   if (!taskCard) return;
   const taskId = taskCard.dataset.id;
 
+  if (event.target.closest('.complete-toggle')) {
+    toggleTaskCompleted(taskId);
+    playSound('complete');
+    return;
+  }
+
   if (event.target.closest('.tag-pill')) {
     currentTagFilter = event.target.closest('.tag-pill').dataset.tag;
     saveFilterState();
@@ -552,7 +569,6 @@ if (sortSelect) {
   });
 }
 
-clearCompletedButton.addEventListener('click', clearCompletedTasks);
 if (markAllCompleteButton) {
   markAllCompleteButton.addEventListener('click', markAllComplete);
 }

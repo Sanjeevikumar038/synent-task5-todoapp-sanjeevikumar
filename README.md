@@ -8,10 +8,20 @@ A local-first, feature-rich to-do app built with vanilla HTML, CSS, and JavaScri
 
 ### Task Management
 - **Add tasks** with a description, due date, priority level, notes, and tags
-- **Edit** task text or notes directly from the task card
+- **Edit** task text or notes directly from the task card via the Edit / Notes buttons
 - **Delete** tasks with a 5-second undo toast so you never lose work by accident
-- **Mark tasks complete** individually via checkbox, or all at once with "Mark All Complete"
-- **Clear completed** tasks in one click
+- **Mark tasks complete** using the circular toggle button on each card
+- **Mark All Complete** — completes every task in one click
+- **Clear All Completed** — appears only when the Completed filter is active
+
+### Completion State
+- Each task card has a **circular checkmark toggle** on the left
+- Hovering shows a faint green checkmark preview
+- Clicking fills the circle solid green and marks the task done
+- A **"✓ Completed" badge** appears below the task title
+- The entire card gets a **green highlighted background and border** so completed tasks are visually distinct
+- The task title gets a strikethrough
+- Clicking the toggle again restores the task to active
 
 ### Priority Levels
 Each task can be assigned one of three priority levels, shown as a colored pill on the card:
@@ -19,27 +29,31 @@ Each task can be assigned one of three priority levels, shown as a colored pill 
 - 🔵 **Medium** — blue pill (default)
 - 🟢 **Low** — green pill
 
+The priority field has a visible **▾ dropdown arrow** so it's clear it has selectable options.
+
 ### Due Dates
-- Set an optional due date on any task
+- Set an optional due date using the **"Due date:"** labeled field in the form
 - Due dates are displayed as a purple pill on the task card
 - **Overdue tasks** (past due and not completed) are automatically highlighted with a red border and background, and the due pill turns red
 
 ### Tags / Categories
 - Add comma-separated tags to any task (e.g. `work, personal, urgent`)
+- Tags are lowercased and trimmed automatically
 - Tags appear as clickable `#tag` pills on each task card
 - A **tag filter bar** appears above the task list when any tags exist
 - Click any tag pill (on a card or in the filter bar) to instantly filter the list to that tag
+- Click **All Tags** to clear the tag filter
 - Tag filter state is saved and restored on reload
 
 ### Search
 - Real-time search bar filters tasks by description as you type
-- Search composes with filters, tag filters, and sort — all work together
+- Composes with status filter, tag filter, and sort — all work together
 
 ### Filters
 Three status filters for the task list:
 - **All** — shows every task
 - **Active** — shows only incomplete tasks
-- **Completed** — shows only completed tasks
+- **Completed** — shows only completed tasks, with a "Clear All Completed" button
 
 ### Sort Options
 Sort the task list using the dropdown in the controls bar:
@@ -90,6 +104,15 @@ The JSON task format:
 - All interactive elements have `aria-label` attributes
 - Live regions (`aria-live`) for task count and undo toast
 - Keyboard-navigable form and controls
+
+### Mobile Responsive
+The app is fully responsive across all screen sizes:
+
+| Breakpoint | Behaviour |
+|---|---|
+| ≤ 720px | Single-column header, stacked form rows, stacked controls, full-width filter buttons and theme toggle |
+| ≤ 600px | Due date and priority stack vertically, sort dropdown goes full-width, action buttons stack |
+| ≤ 480px | Reduced padding and font sizes throughout, smaller task cards and pills, undo toast stacks vertically |
 
 ---
 

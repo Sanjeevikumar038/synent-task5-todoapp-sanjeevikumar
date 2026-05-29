@@ -28,12 +28,15 @@
           <button type="submit">Add Task</button>
         </div>
         <div class="form-row inputs-row">
-          <input id="task-due" type="date" aria-label="Task due date" />
-          <select id="task-priority" aria-label="Task priority">
-            <option value="medium" selected>Priority: Medium</option>
-            <option value="high">Priority: High</option>
-            <option value="low">Priority: Low</option>
-          </select>
+          <label class="date-label" for="task-due">Due date: <input id="task-due" type="date" aria-label="Task due date" /></label>
+          <div class="select-wrapper">
+            <select id="task-priority" aria-label="Task priority">
+              <option value="medium" selected>Priority: Medium</option>
+              <option value="high">Priority: High</option>
+              <option value="low">Priority: Low</option>
+            </select>
+            <span class="select-arrow">▾</span>
+          </div>
         </div>
         <textarea id="task-notes" rows="2" placeholder="Optional notes or subtasks" aria-label="Task notes"></textarea>
         <input id="task-tags" type="text" placeholder="Tags: work, personal, urgent (comma separated)" aria-label="Task tags" />
@@ -55,7 +58,6 @@
         </div>
         <div class="action-buttons">
           <button id="mark-all-complete" class="secondary">Mark All Complete</button>
-          <button id="clear-completed" class="secondary">Clear Completed</button>
           <select id="sort-tasks" aria-label="Sort tasks">
             <option value="default">Sort: Default</option>
             <option value="priority">Sort: Priority</option>
@@ -81,11 +83,6 @@
       <input id="import-file" type="file" accept="application/json" hidden />
       <div id="undo-toast" class="undo-toast hidden" role="status" aria-live="polite">
         Task deleted. <button id="undo-delete" type="button">Undo</button>
-      </div>
-
-      <div class="task-summary" aria-live="polite">
-        <span id="task-count">0 tasks</span>
-        <span id="completed-count">0 completed</span>
       </div>
 
       <ul id="task-list" class="task-list" aria-label="Task list"></ul>
