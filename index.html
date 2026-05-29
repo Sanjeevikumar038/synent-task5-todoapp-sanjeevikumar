@@ -23,8 +23,19 @@
 
     <section class="todo-panel">
       <form id="task-form" class="task-form" aria-label="Add new task">
-        <input id="task-input" type="text" placeholder="What do you want to get done?" aria-label="Task description" required />
-        <button type="submit">Add Task</button>
+        <div class="form-row">
+          <input id="task-input" type="text" placeholder="What do you want to get done?" aria-label="Task description" required />
+          <button type="submit">Add Task</button>
+        </div>
+        <div class="form-row inputs-row">
+          <input id="task-due" type="date" aria-label="Task due date" />
+          <select id="task-priority" aria-label="Task priority">
+            <option value="medium" selected>Priority: Medium</option>
+            <option value="high">Priority: High</option>
+            <option value="low">Priority: Low</option>
+          </select>
+        </div>
+        <textarea id="task-notes" rows="2" placeholder="Optional notes or subtasks" aria-label="Task notes"></textarea>
       </form>
 
       <div class="search-panel">
@@ -39,7 +50,28 @@
           <button class="filter-button" data-filter="active">Active</button>
           <button class="filter-button" data-filter="completed">Completed</button>
         </div>
-        <button id="clear-completed" class="secondary">Clear Completed</button>
+        <div class="action-buttons">
+          <button id="mark-all-complete" class="secondary">Mark All Complete</button>
+          <button id="clear-completed" class="secondary">Clear Completed</button>
+        </div>
+      </div>
+
+      <div class="summary-row">
+        <div class="task-summary" aria-live="polite">
+          <span id="task-count">0 tasks</span>
+          <span id="completed-count">0 completed</span>
+        </div>
+        <div class="progress-chip" id="progress-chip">0% complete</div>
+      </div>
+
+      <div class="controls controls-secondary">
+        <button id="export-tasks" class="secondary">Export Tasks</button>
+        <button id="import-tasks" class="secondary">Import Tasks</button>
+      </div>
+
+      <input id="import-file" type="file" accept="application/json" hidden />
+      <div id="undo-toast" class="undo-toast hidden" role="status" aria-live="polite">
+        Task deleted. <button id="undo-delete" type="button">Undo</button>
       </div>
 
       <div class="task-summary" aria-live="polite">
