@@ -1,5 +1,7 @@
 # Better To-Do App
 
+**Live Demo:** [https://sanjeevikumar038.github.io/synent-task5-todoapp-sanjeevikumar/](https://sanjeevikumar038.github.io/synent-task5-todoapp-sanjeevikumar/)
+
 A local-first, feature-rich to-do app built with vanilla HTML, CSS, and JavaScript. No frameworks, no backend, no account needed — everything is saved in your browser's localStorage.
 
 ---
